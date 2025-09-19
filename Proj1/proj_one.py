@@ -5,6 +5,12 @@ from PIL import Image
 from collections.abc import Callable
 type array = np.ndarray
 
+"""
+TODO: The current structure with higher order functions is not very good since
+it's difficult to inspect data during the process. Should probably refactor.
+
+Only half the code is type annotated
+"""
 
 def viewdigit(
         digit_vec: array
@@ -161,8 +167,12 @@ def calc_success_rates_using_PCA(test_sets, squared_us):
 
 
 def print_results(succes_rates):
-    for i, rate in enumerate(succes_rates):
-        print(f"{i}: {rate:.2f}%")
+    rates = zip(*succes_rates)
+    for i, rate in enumerate(rates):
+        out = f"{i} | "
+        for element in rate:
+            out += f"{element:.2%} |"
+        print(out)
 
 
 
@@ -176,18 +186,98 @@ def main():
     print("Calculating mean distance successrate")
     mean_distance_succes_rates = calc_success_rates_using_mean_distances(test_sets, mean_train_digits)
 
-    print("Calculating singular vectors")
-    squared_us = [get_squared_singular_vectors(train_set, 5) for train_set in train_sets]
-    print("Calculating PCA successrate")
-    PCA_succes_rate = calc_success_rates_using_PCA(test_sets, squared_us)
+    PCA_res = []
+    for i in (2,3,5,20,50):
+        print(f"Calculating {i} singular vectors")
+        squared_us = [get_squared_singular_vectors(train_set, i) for train_set in train_sets]
+        print("Calculating PCA successrate")
+        PCA_succes_rate = calc_success_rates_using_PCA(test_sets, squared_us)
+        PCA_res.append(PCA_succes_rate)
 
-    print("Mean distance results: ")
-    print_results(mean_distance_succes_rates)
-    print("PCA results: ")
-    print_results(PCA_succes_rate)
+    print_results([mean_distance_succes_rates] + PCA_res)
+
+
+
+    # The following code was used to inspect how the mean distance method labeled the different test sets
+
+    # mean_dist_labeled = list(label_data_using_mean_distances(train_sets[8], mean_train_digits))
+    # res = []
+    # for i in range(10):
+    #     res.append(mean_dist_labeled.count(i) / len(mean_dist_labeled))
+    # for n in res:
+    #     print(f"{i}: {n:.2%}")
+        
     
     
 
 if __name__ == "__main__":
     main()
 
+
+
+# 0 | 89.59% |93.47% |96.53% |97.86% |98.78% |99.18% |
+# 1 | 96.21% |98.33% |99.21% |99.21% |99.38% |98.59% |
+# 2 | 75.68% |84.50% |89.53% |90.21% |93.51% |94.48% |
+# 3 | 80.59% |86.24% |89.21% |93.76% |94.16% |93.27% |
+# 4 | 82.59% |80.14% |87.58% |89.82% |96.84% |96.54% |
+# 5 | 68.61% |79.37% |82.17% |90.13% |93.95% |92.04% |
+# 6 | 86.33% |93.01% |95.09% |96.24% |97.49% |96.76% |
+# 7 | 83.27% |84.73% |86.77% |89.30% |94.55% |91.93% |
+# 8 | 73.72% |83.26% |85.83% |90.04% |94.35% |93.84% |
+# 9 | 80.67% |86.52% |88.90% |88.90% |93.86% |94.25% |
+
+
+
+
+#OLD
+
+# Mean distance results: 
+# 0: 89.59%
+# 1: 96.21%
+# 2: 75.68%
+# 3: 80.59%
+# 4: 82.59%
+# 5: 68.61%
+# 6: 86.33%
+# 7: 83.27%
+# 8: 73.72%
+# 9: 80.67%
+
+
+# PCA results (5 vectors):
+# 0: 97.86%
+# 1: 99.21%
+# 2: 90.21%
+# 3: 93.76%
+# 4: 89.82%
+# 5: 90.13%
+# 6: 96.24%
+# 7: 89.30%
+# 8: 90.04%
+# 9: 88.90%
+
+
+# PCA results (2 vectors):
+# 0: 93.47%
+# 1: 98.33%
+# 2: 84.50%
+# 3: 86.24%
+# 4: 80.14%
+# 5: 79.37%
+# 6: 93.01%
+# 7: 84.73%
+# 8: 83.26%
+# 9: 86.52%
+
+
+# PCA results (20 vectors):
+# 0: 98.78%
+# 1: 99.38%
+# 2: 93.51%
+# 3: 94.16%
+# 4: 96.84%
+# 5: 93.95%
+# 6: 97.49%
+# 7: 94.55%
+# 8: 94.35%
+# 9: 93.86%
